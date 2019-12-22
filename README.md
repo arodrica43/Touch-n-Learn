@@ -1,2 +1,2 @@
 # Touch-Learn
-Multisensorial app for studying the learning of english powered by Explora Project.
+Multisensorial gamified app for studying the learning of english powered by Explora Project.
