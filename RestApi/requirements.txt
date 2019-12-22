@@ -1,0 +1,10 @@
+Flask==1.0.2
+Flask-SQLAlchemy==2.3.2
+gunicorn==19.8.1
+psycopg2-binary==2.7.5
+SQLAlchemy==1.2.9
+SpeechRecognition==3.8.1
+pocketsphinx==0.1.15
+scipy==1.2.2
+numpy==1.16.4
+boto3==1.10.43

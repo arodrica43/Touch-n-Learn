@@ -1,0 +1,7 @@
+setup.py
+unityrest.egg-info/PKG-INFO
+unityrest.egg-info/SOURCES.txt
+unityrest.egg-info/dependency_links.txt
+unityrest.egg-info/not-zip-safe
+unityrest.egg-info/requires.txt
+unityrest.egg-info/top_level.txt
