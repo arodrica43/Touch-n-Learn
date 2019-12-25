@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Video;
 using UnityEngine.UI;
+using System.Threading;
 
 public class TouchAction : MonoBehaviour
 {
@@ -26,32 +27,94 @@ public class TouchAction : MonoBehaviour
     private bool done = false;
     private bool nowhere = false;
     private string current_stimuli_key;
+    private Vector3 key = new Vector3(0,0,0);
+    private IEnumerator coroutine;
+    private IEnumerator coroutineb;
+    private bool working = false;
     void Start()
     {
+        rend = GetComponent<Renderer>();
+        GameLogic.update_stimuli = false;
         GameLogic.stimuli_play_count = 0;
         GameLogic.stimulated = false;
-        Vector3 key = GameLogic.SelectStimuli_coord();
-        Debug.Log(key);
-        current_stimuli_key = "" + key.x + string.Format("{0:00}",key.y) + key.z;
-        //GameLogic.user.stimuli_history += current_stimuli_key;
-        
-        //bt.onClick.AddListener(Transition);
-        // Load .wav to the AudioClip
-        if(GameLogic.user.lvl > 60 && GameLogic.user.lvl <= 180){
-            
-            video.clip = GameLogic.SelectAVStimuli(key);
 
-        }
-        audio.clip = GameLogic.SelectAStimuli(key);
-        rend = GetComponent<Renderer>();
-        rend.material.mainTexture = paused;
+       //GameLogic.first_assigned = false;
+        coroutine = WaitAndPrint(UnityEngine.Random.Range(0.0f,0.6f));
+        StartCoroutine(coroutine);        
         
     }
+
+    private IEnumerator WaitAndPrint(float waitTime)
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(waitTime);
+            key = GameLogic.SelectStimuli_coord();
+            //Debug.Log("Currkey:" +key);
+ 
+            //Debug.Log(key);
+            current_stimuli_key = "" + key.x + string.Format("{0:00}",key.y) + key.z;
+            //GameLogic.user.stimuli_history += current_stimuli_key;
+            
+            //bt.onClick.AddListener(Transition);
+            // Load .wav to the AudioClip
+            if(GameLogic.user.lvl > 60 && GameLogic.user.lvl <= 180){
+                
+                video.clip = GameLogic.SelectAVStimuli(key);
+
+            }
+            audio.clip = GameLogic.SelectAStimuli(key);
+            
+            rend.material.mainTexture = paused;
+
+            //print("WaitAndPrint " + Time.time);
+            StopCoroutine(coroutine);
+        }
+    }
+
+    private IEnumerator WaitAndPrintUp(float waitTime)
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(waitTime);
+            GameLogic.stimuli_change_count++;
+            key = GameLogic.SelectStimuli_coord();
+            //Debug.Log(key);
+            current_stimuli_key = "" + key.x + string.Format("{0:00}",key.y) + key.z;
+            done = false;
+           // GameLogic.user.stimuli_history += current_stimuli_key;
+
+            if(GameLogic.user.lvl > 60 && GameLogic.user.lvl <= 180){
+                video.clip = GameLogic.SelectAVStimuli(key);
+            }
+            audio.clip = GameLogic.SelectAStimuli(key);
+              
+            if(GameLogic.SelectScene() == "PerceptionAX"){
+                if(GameLogic.stimuli_change_count == 2){
+                        GameLogic.update_stimuli = false;
+                }
+            }else if(GameLogic.SelectScene() == "PerceptionABX"){
+                if(GameLogic.stimuli_change_count == 3){
+                        GameLogic.update_stimuli = false;
+                }
+            }else{
+                if(GameLogic.stimuli_change_count == 1){
+                        GameLogic.update_stimuli = false;
+                }
+            }
+            //Debug.Log("Stopping..");
+            StopCoroutine(coroutineb);
+        }
+    }
+
+
+
+
 
     // Update is called once per frame
     void Update()
     {
-        
+           
         if(GameLogic.SelectScene() == "PerceptionAX"){
             if(GameLogic.stimuli_play_count > 1){
                 GameLogic.stimulated = true;
@@ -136,31 +199,13 @@ public class TouchAction : MonoBehaviour
             updating = true;
             play = false;
             rend.material.mainTexture = paused;
-            GameLogic.stimuli_change_count++;
+  
+            GameLogic.first_assigned = false;
            
-            Vector3 key = GameLogic.SelectStimuli_coord();
-            current_stimuli_key = "" + key.x + string.Format("{0:00}",key.y) + key.z;
-            done = false;
-           // GameLogic.user.stimuli_history += current_stimuli_key;
+            //StartCoroutine(WaitAndPrint(UnityEngine.Random.Range(0.0f,1.0f)));
+            coroutineb = WaitAndPrintUp(UnityEngine.Random.Range(0.0f,0.6f));
+            StartCoroutine(coroutineb);
 
-            if(GameLogic.user.lvl > 60 && GameLogic.user.lvl <= 180){
-                video.clip = GameLogic.SelectAVStimuli(key);
-            }
-            audio.clip = GameLogic.SelectAStimuli(key);
-              
-            if(GameLogic.SelectScene() == "PerceptionAX"){
-                if(GameLogic.stimuli_change_count == 2){
-                        GameLogic.update_stimuli = false;
-                }
-            }else if(GameLogic.SelectScene() == "PerceptionABX"){
-                if(GameLogic.stimuli_change_count == 3){
-                        GameLogic.update_stimuli = false;
-                }
-            }else{
-                if(GameLogic.stimuli_change_count == 1){
-                        GameLogic.update_stimuli = false;
-                }
-            }
         }
 
         if(!GameLogic.update_stimuli){

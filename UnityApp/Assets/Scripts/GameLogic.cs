@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 using System;
 using UnityEngine.Video;
 using System.IO;
+using System.Threading;
 
 public static class GameLogic
 {
@@ -15,6 +16,8 @@ public static class GameLogic
         AVT
     };
 	
+
+	public static Semaphore _pool = new Semaphore(0, 1);
     public static DataController dc =  new DataController();
 	public static Models.User user = new Models.User();
     public static int NUM_TYPES = 20;
@@ -58,6 +61,15 @@ public static class GameLogic
 	public static string llpath;
 	//public static List<Models.User> users = new List<Models.User>();
 	public static int num_users;
+	public static bool first_assigned = false;
+	public static bool second_assigned = false;
+	public static Vector3 tmp_stimuli = new Vector3(-1,-1,-1);
+	public static Vector3 tmp_stimulib;
+
+	public static GameObject lck = new GameObject();
+	
+	
+
 	public static void InitData()
     {
 		InitFeedbackAnimalLayers();
@@ -88,10 +100,14 @@ public static class GameLogic
 				AudioClip next_audio = Resources.Load<AudioClip>(path +  "/aud"); 
 				while(next_video != null && next_audio != null){
 					Vector3 v = new Vector3(i,j,k);
+					if(v.x == 1 && v.y == 1 && v.z == 2){
+						Debug.Log(path);
+					}
 					videos.Add(v,next_video);
 					audios.Add(v,next_audio);
 					k++;
 					path = "data/" + types[i] + "/" + phonemes[j] + "/" + k ;
+					
 					next_video = Resources.Load<VideoClip>(path +  "/vid"); 
 					next_audio = Resources.Load<AudioClip>(path +  "/aud"); 
 				}				
@@ -105,7 +121,7 @@ public static class GameLogic
 		closing = false;
 		user = usr;
 		mode = ParseMode(user.mode);
-		Debug.Log("Im here " + mode);
+		//Debug.Log("Im here " + mode);
 		user.setCType();
 		abx_dragged = 0; 
 		feedback_count = (user.lvl - 1) % 6;
@@ -148,19 +164,178 @@ public static class GameLogic
 
 	public static Vector3 SelectStimuli_coord()
     {
-		
-       //Random rnd = new Random();
-        int i = UnityEngine.Random.Range(0,3);
-        int j = UnityEngine.Random.Range(0,11);
-        int k = UnityEngine.Random.Range(1,3);
-        Vector3 key = new Vector3(i,j,k);
+		int i, j, k;
+		float p, q;
+		Vector3 key;
+		 lock(lck)
+		{
+			//Critical section code goes here
 
+		string scene = GameLogic.SelectScene();
+		if(scene.Equals("PerceptionAX")){
+			//Debug.Log(first_assigned);
+			if(first_assigned){
+				first_assigned = false;
+				i = 1;
+
+				//Debug.Log(tmp_stimuli.y);
+				j = SelectNeighbor((int)tmp_stimuli.y);
+				k = ((user.lvl % 5)*(user.lvl % 13) % 3)  + 1;
+				tmp_stimuli = new Vector3(i,j,k);
+				Debug.Log(tmp_stimuli);
+				//_pool.Release();
+				Debug.Log("Entering");
+
+				return tmp_stimuli;
+			}else{
+				tmp_stimuli.y = -1;
+				first_assigned = true;
+				i = 1;
+				j = UnityEngine.Random.Range(0,11);
+				k =((user.lvl % 5)*(user.lvl % 13) % 3)  + 1;
+				tmp_stimuli = new Vector3(i,j,k);
+				Debug.Log(tmp_stimuli);
+				Debug.Log("Entering1");
+				return tmp_stimuli;
+			}
+
+		}else if(scene.Equals("PerceptionABX")){
+			if(first_assigned){
+				first_assigned = false;
+				second_assigned = true;
+				i = 1;
+				j = SelectNeighbor((int)tmp_stimuli.y);
+				k = ((user.lvl % 5)*(user.lvl % 13) % 3)  + 1;
+				tmp_stimulib = new Vector3(i,j,k);
+				Debug.Log(tmp_stimulib);
+				
+				//_pool.Release();
+				Debug.Log("Entering");
+				return tmp_stimulib;
+			}else{
+				i = 1;
+				j = ((user.lvl % 5)*(user.lvl % 13) % 11);	
+				k = ((user.lvl % 5)*(user.lvl % 13) % 3)  + 1;
+				tmp_stimuli = new Vector3(i,j,k);
+				first_assigned = true;
+				Debug.Log(tmp_stimuli);
+				//_pool.Release();
+				Debug.Log("Entering1");
+				return tmp_stimuli;
+			}
+
+		}else if(scene.Equals("ProductionA") || scene.Equals("ProductionAV") || scene.Equals("ProductionAVT")){
+			
+			
+			if(user.lvl > 60 && user.lvl < 181){
+				//procedural
+				if(user.lvl < 121){
+					p = UnityEngine.Random.Range(0.0f,1.0f);
+					if(p < 0.5*(user.lvl - 61)/59.0f){
+						i = 1;
+					}else{
+						i = 0;
+					}
+				}else{
+					p = UnityEngine.Random.Range(0.0f,1.0f);
+					if(p < (1.0f/3.0f)*(user.lvl - 121)/59.0f){
+						i = 2;
+					}else if(p < (2.0f/3.0f) && p >= (1.0f/3.0f)){
+						i = 0;
+					}else{
+						i = 1;
+					}
+				}
+			}else{
+				//cvc
+				i = 1;
+			}
+			
+			p = UnityEngine.Random.Range(0.0f,1.0f);
+		
+			if(p <= 0.6f){
+				q = UnityEngine.Random.Range(0,5);
+				j = new int[5]{0,1,6,9,10}[(int)q];
+			}
+			else if(p > 0.6f && p <= 0.85f){
+				j = 2;
+			}else if(p > 0.85f && p <= 0.95f){
+				q = UnityEngine.Random.Range(0,3);
+				j = new int[3]{3,4,7}[(int)q];
+			}else{
+				q = UnityEngine.Random.Range(0,2);
+				j = new int[2]{5,8}[(int)q];
+			}
+
+			k =((user.lvl % 5)*(user.lvl % 13) % 3)  + 1;;
+			key = new Vector3(i,j,k);
+			//_pool.Release();
+			return key;
+		}
+
+		}
+		
+       //default case. Never enter
+    	i = UnityEngine.Random.Range(0,3);
+        j = UnityEngine.Random.Range(0,11);
+        k =((user.lvl % 5)*(user.lvl % 13) % 3)  + 1;
+        key = new Vector3(i,j,k);
 		//user.stimuli_history += "" + i + string.Format("{0:00}",j) + k;
 		//current_stimulis.Enqueue(key);
         //Debug.Log("" + key[0] + key[1] + key[2]);
-        return key;       
+        return key;   
+		    
     }
 
+	public static int SelectNeighbor(int ph)
+    {
+		//Phonemes: "AE", "AA", "AO", "EH", "ER", "IH", "IY", "AO_R", "UW", "UH", "AH"
+		//0 .. 10
+		List<int> neighbors = new List<int>();
+		switch(ph){
+			case 0:
+				neighbors.Add(1); neighbors.Add(2); neighbors.Add(10);
+				break;
+			case 1:
+				neighbors.Add(2); neighbors.Add(10);
+				break;
+			case 2:
+				neighbors.Add(0); neighbors.Add(1); neighbors.Add(10);
+				break;
+			case 3:
+				neighbors.Add(4); neighbors.Add(6);
+				break;
+			case 4:
+				neighbors.Add(3); neighbors.Add(5);
+				break;
+			case 5:
+				neighbors.Add(4); neighbors.Add(6);
+				break;
+			case 6:
+				neighbors.Add(3); neighbors.Add(5);
+				break;
+			case 7:
+				neighbors.Add(8); neighbors.Add(9);
+				break;
+			case 8:
+				neighbors.Add(7); neighbors.Add(9);
+				break;
+			case 9:
+				neighbors.Add(7); neighbors.Add(8);
+				break;
+			case 10:
+				neighbors.Add(0); neighbors.Add(1);neighbors.Add(2);
+				break;
+		}
+		
+		if(!hard_perception){
+			//Debug.Log("HARD");
+			neighbors.Add(ph);
+		}
+		
+		int res = neighbors[UnityEngine.Random.Range(0,neighbors.Count)]; 
+        return res;       
+    }
 
 	public static VideoClip SelectAVStimuli()
     {
@@ -241,6 +416,9 @@ public static class GameLogic
 
 		current_scene = scene; 
 		selected_animal = (lvl - 1) / 30;
+		//first_assigned = true;
+		second_assigned = false;
+		//update_stimuli = false;
 		//Debug.Log("Selecting Scene: " + scene);
 		//Debug.Log("Data -> Mode: " + mode + ", Level: " + user.lvl);
 		//Debug.Log(GameLogic.user.bag);

@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System;
-
 using UnityEngine.SceneManagement;
 
 public class TurnColorScript : MonoBehaviour
@@ -50,7 +49,8 @@ public class TurnColorScript : MonoBehaviour
             if ((t - collider_proj).magnitude <  collider.radius)
             {
                 render.material.color = new Color(116.0f/255,221.0f/255,137.0f/255,1.0f);
-				//Vector3 index = new Vector3(keypoints.curr_word, keypoints.curr_spk, keypoints.curr_speed);
+                //Vibration.Vibrate(10);
+                //Vector3 index = new Vector3(keypoints.curr_word, keypoints.curr_spk, keypoints.curr_speed);
 //                Statistics.sCount[index] += 0.25f;
                 
             }else{
@@ -85,7 +85,7 @@ public class TurnColorScript : MonoBehaviour
                 
 			    render.material.color = new Color(116.0f/255,221.0f/255,137.0f/255,1.0f);
 //			    Play();
-					
+				//Vibration.Vibrate(10);
 			    if (t.phase == TouchPhase.Ended)
 			    {
 				    render.material.color = Color.white;
