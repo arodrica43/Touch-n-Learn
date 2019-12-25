@@ -16,12 +16,12 @@ app = Flask(__name__, instance_relative_config=False)
 db = SQLAlchemy(app)
 port = int(os.environ.get("PORT", 5000))
 
-app.config['SQLALCHEMY_DATABASE_URI'] = "postgres://ymkzuxwlkldyab:f9043b3528a1e5d428e5cccddf298176619c9a82400227aec156794a28a481b0@ec2-46-137-91-216.eu-west-1.compute.amazonaws.com:5432/d6ddg8pa2phsko"
+app.config['SQLALCHEMY_DATABASE_URI'] = "XXX"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 app.config['UPLOAD_FOLDER'] = ""
 
-aws_key_id='AKIAILTSEQ4KD75A6PDA'
-aws_key_id_pwd='VomaHSy/cUOjxv093u+ZASCi/2p6tFA06WRvVWT1'
+aws_key_id='XXX'
+aws_key_id_pwd='XXX'
 bucket = 'audiobucket-explora-app'
 
 
